@@ -28,11 +28,88 @@ button:active{box-shadow:inset 3px 3px #555,inset -3px -3px #fff;transform:trans
 .help{padding:11px;border-top:2px solid var(--c);color:var(--x);font-size:7px;line-height:1.8}.help b{color:var(--w)}
 @media(max-width:780px){.main{grid-template-columns:1fr}.side{display:grid;grid-template-columns:1fr 1fr}.buttons{grid-column:1/-1}#log{height:145px}}
 @media(max-width:540px){body{padding:5px}.shell{border-width:3px}.top{font-size:7px}.main{padding:6px;gap:6px}.side{display:flex}.panel{border-width:2px}#log{height:160px}.radio{left:5px;bottom:5px;width:218px;padding:6px}.speaker{width:36px;height:24px}.rbuttons button{min-height:34px;padding:7px 3px}}
+
+/* ============ FIELD UNIT SHELL / TICKET BRIDGE ============ */
+.fu-gamebar{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;
+  gap:9px;
+  padding:8px 10px;
+  border-bottom:2px solid var(--cyan,#00aaaa);
+  background:var(--black,#000);
+  font-family:var(--font,"Press Start 2P",monospace);
+}
+.fu-gamebar button{
+  margin:0;
+  min-height:34px;
+  padding:7px 9px;
+  font-size:7px;
+  color:var(--black,#000);
+  background:var(--grey,#aaa);
+}
+.fu-goal{
+  min-width:0;
+  color:var(--white,#fff);
+  font-size:7px;
+  line-height:1.6;
+  text-align:center;
+}
+.fu-goal b{color:var(--yellow,#ffff55)}
+.fu-ticket{
+  color:var(--cyan,#00aaaa);
+  font-size:7px;
+  line-height:1.5;
+  text-align:right;
+  white-space:nowrap;
+}
+.fu-ticket.earned{color:var(--lime,#55ff55)}
+#fuTicketFlash{
+  position:fixed;
+  inset:50% auto auto 50%;
+  z-index:1000;
+  width:min(430px,calc(100% - 32px));
+  transform:translate(-50%,-50%) scale(.85);
+  padding:22px 18px;
+  border:5px double var(--white,#fff);
+  color:var(--yellow,#ffff55);
+  background:var(--blue,#0000aa);
+  box-shadow:0 0 0 5px var(--black,#000);
+  font-size:12px;
+  line-height:1.8;
+  text-align:center;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .12s steps(2,end),transform .12s steps(2,end);
+}
+#fuTicketFlash.on{
+  opacity:1;
+  transform:translate(-50%,-50%) scale(1);
+}
+@media(max-width:600px){
+  .fu-gamebar{
+    grid-template-columns:auto 1fr;
+  }
+  .fu-goal{
+    grid-column:1/-1;
+    grid-row:2;
+    text-align:left;
+    font-size:6px;
+  }
+  .fu-ticket{font-size:6px}
+}
 </style>
 </head>
 <body>
 <div class="shell">
   <div class="top"><span>PUBEXE // LAST ORDERS</span><span id="clock">00:00:00</span></div>
+
+  <div class="fu-gamebar">
+    <button id="fuBack" type="button">← FIELD UNIT</button>
+    <div class="fu-goal"><b>TICKET GOAL:</b> FINISH A PINT IN 6.00 SECONDS</div>
+    <div class="fu-ticket" id="fuTicketStatus">TICKET 0 / 1</div>
+  </div>
+  <div id="fuTicketFlash" aria-live="assertive">TICKET EARNED<br>PUBEXE</div>
   <div class="main">
     <section class="view">
       <canvas id="game" width="640" height="480" aria-label="Rapid tap pint drinking game"></canvas>
@@ -88,14 +165,17 @@ function tone(f=440,d=.08,v=.04,type="square",slide=0){const ac=ensureAudio();if
 function gulp(){tone(115,.055,.035,"square",-30);setTimeout(()=>tone(85,.05,.022,"triangle",-10),40)}
 function syncAudio(){ui.sound.textContent="SFX: "+(soundOn?"ON":"OFF");ui.music.textContent="MUSIC: "+(musicOn?"ON":"OFF");ui.screenSound.textContent="SFX "+(soundOn?"ON":"OFF");ui.screenMusic.textContent="MUSIC "+(musicOn?"ON":"OFF");ui.screenSound.classList.toggle("on",soundOn);ui.screenSound.classList.toggle("off",!soundOn);ui.screenMusic.classList.toggle("on",musicOn);ui.screenMusic.classList.toggle("off",!musicOn)}
 function setTrack(i){trackIndex=(i+PLAYLIST.length)%PLAYLIST.length;const t=PLAYLIST[trackIndex];ui.nowTrack.textContent=t.title;ui.nowArtist.textContent=t.artist;ui.screenTrack.textContent=t.title;bgm.pause();bgm.src=t.src;bgm.currentTime=0;bgm.volume=musicOn?0.34:0;if(musicOn)bgm.play().catch(()=>{ui.nowTrack.textContent="TAP TO START RADIO";ui.screenTrack.textContent="TAP TO START"})}
-function startMusic(){if(musicStarted)return;musicStarted=true;setTrack(Math.floor(Math.random()*PLAYLIST.length))}
+function startMusic(){
+  if(fuRadio("start"))return;if(musicStarted)return;musicStarted=true;setTrack(Math.floor(Math.random()*PLAYLIST.length))}
 function nextTrack(){setTrack(trackIndex+1)}
 function toggleSound(){soundOn=!soundOn;syncAudio();if(soundOn)tone(460,.06,.035,"square",70)}
-function toggleMusic(){musicOn=!musicOn;syncAudio();if(musicOn){startMusic();bgm.volume=.34;bgm.play().catch(()=>{})}else bgm.pause()}
-function skipTrack(){if(!musicOn){musicOn=true;syncAudio()}if(!musicStarted)startMusic();else nextTrack();bgm.volume=.34;bgm.play().catch(()=>{});addLog("RADIO SKIP // "+PLAYLIST[trackIndex].title,"good")}
+function toggleMusic(){
+  if(fuRadio("toggle"))return;musicOn=!musicOn;syncAudio();if(musicOn){startMusic();bgm.volume=.34;bgm.play().catch(()=>{})}else bgm.pause()}
+function skipTrack(){
+  if(fuRadio("skip"))return;if(!musicOn){musicOn=true;syncAudio()}if(!musicStarted)startMusic();else nextTrack();bgm.volume=.34;bgm.play().catch(()=>{});addLog("RADIO SKIP // "+PLAYLIST[trackIndex].title,"good")}
 bgm.addEventListener("ended",()=>{if(musicOn)nextTrack()});
 function newPint(){state.taps=0;state.left=1;state.running=false;state.finished=false;state.start=0;state.finish=0;state.lastTap=0;state.rate=0;setStatus("TAP TO START",900);addLog("FRESH PINT SERVED.");update()}
-function finishPint(){state.running=false;state.finished=true;state.finish=now();const t=state.finish-state.start;state.pints++;if(state.best==null||t<state.best)state.best=t;setStatus("PINT FINISHED!",1300);addLog("PINT DOWN // "+fmt(t),t<4000?"great":"good");tone(430,.08,.04,"square",170);setTimeout(()=>tone(680,.1,.04,"square",130),90);update()}
+function finishPint(){state.running=false;state.finished=true;state.finish=now();const t=state.finish-state.start;state.pints++;if(t<=6000)fuAwardTicket();if(state.best==null||t<state.best)state.best=t;setStatus("PINT FINISHED!",1300);addLog("PINT DOWN // "+fmt(t),t<4000?"great":"good");tone(430,.08,.04,"square",170);setTimeout(()=>tone(680,.1,.04,"square",130),90);update()}
 function tapDrink(){ensureAudio();startMusic();const t=now();if(state.finished){newPint();return}if(!state.running){state.running=true;state.start=t;setStatus("CHUG!",500);addLog("TIMER STARTED.","good")}state.taps++;const interval=state.lastTap?t-state.lastTap:180;state.lastTap=t;state.rate=clamp(1-interval/360,0,1);const gulpSize=.018+state.rate*.014+(Math.random()*.005);state.left=clamp(state.left-gulpSize,0,1);gulp();if(state.left<=0)finishPint();update()}
 cv.addEventListener("pointerdown",e=>{e.preventDefault();tapDrink()});
 ui.sound.addEventListener("click",toggleSound);ui.music.addEventListener("click",toggleMusic);ui.skip.addEventListener("click",skipTrack);ui.reset.addEventListener("click",newPint);ui.screenSound.addEventListener("click",toggleSound);ui.screenMusic.addEventListener("click",toggleMusic);ui.screenSkip.addEventListener("click",skipTrack);
@@ -106,6 +186,76 @@ function grain(t){const ph=(t/75|0)%4;ctx.globalAlpha=.17;ctx.fillStyle=C.w;for(
 function loop(t){drawPub(t);drawPint(t);drawHUD();grain(t);if(state.running)update();requestAnimationFrame(loop)}
 function clock(){const d=new Date();ui.clock.textContent=[d.getHours(),d.getMinutes(),d.getSeconds()].map(v=>String(v).padStart(2,"0")).join(":")}
 update();syncAudio();clock();setInterval(clock,1000);requestAnimationFrame(loop);
+
+/* ---------- shared Field Unit shell + ticket bridge ---------- */
+const FU_GAME_ID="pubexe";
+const FU_GAME_TITLE="PUBEXE";
+const FU_GAME_GOAL="FINISH A PINT IN 6.00 SECONDS";
+const FU_TICKET_KEY="fieldUnitTicketsV1";
+const FU_EMBEDDED=window.parent!==window;
+
+function fuReadTickets(){
+  try{
+    const value=JSON.parse(localStorage.getItem(FU_TICKET_KEY)||"{}");
+    return value&&typeof value==="object"?value:{};
+  }catch(err){return {};}
+}
+function fuHasTicket(){return !!fuReadTickets()[FU_GAME_ID];}
+function fuUpdateTicketUI(){
+  const el=document.getElementById("fuTicketStatus");
+  if(!el)return;
+  const earned=fuHasTicket();
+  el.textContent=earned?"TICKET 1 / 1":"TICKET 0 / 1";
+  el.classList.toggle("earned",earned);
+}
+function fuAwardTicket(){
+  const tickets=fuReadTickets();
+  if(tickets[FU_GAME_ID]){fuUpdateTicketUI();return false;}
+  tickets[FU_GAME_ID]={earnedAt:Date.now(),goal:FU_GAME_GOAL};
+  try{localStorage.setItem(FU_TICKET_KEY,JSON.stringify(tickets));}catch(err){}
+  fuUpdateTicketUI();
+  const flash=document.getElementById("fuTicketFlash");
+  if(flash){
+    flash.classList.add("on");
+    setTimeout(()=>flash.classList.remove("on"),2100);
+  }
+  if(FU_EMBEDDED){
+    window.parent.postMessage({type:"FU_TICKET",game:FU_GAME_ID},"*");
+  }
+  return true;
+}
+function fuRadio(action){
+  if(!FU_EMBEDDED)return false;
+  window.parent.postMessage({type:"FU_RADIO",action},"*");
+  return true;
+}
+function fuApplyRadioState(state){
+  if(!state)return;
+  musicOn=!!state.musicOn;
+  musicStarted=!!state.started;
+  trackIndex=Number.isFinite(state.trackIndex)?state.trackIndex:0;
+  const title=state.title||"WAITING FOR INPUT";
+  const artist=state.artist||"FIELD UNIT";
+  if(ui.screenTrack)ui.screenTrack.textContent=title;
+  if(ui.nowTrack)ui.nowTrack.textContent=title;
+  if(ui.nowArtist)ui.nowArtist.textContent=artist;
+  try{syncAudio();}catch(err){}
+}
+window.addEventListener("message",event=>{
+  const data=event.data||{};
+  if(data.type==="FU_RADIO_STATE")fuApplyRadioState(data.state);
+  if(data.type==="FU_TICKET_STATE")fuUpdateTicketUI();
+});
+const fuBack=document.getElementById("fuBack");
+if(fuBack){
+  fuBack.addEventListener("click",()=>{
+    if(FU_EMBEDDED)window.parent.postMessage({type:"FU_CLOSE_GAME"},"*");
+    else window.location.href="https://field-unit.github.io/";
+  });
+}
+fuUpdateTicketUI();
+if(FU_EMBEDDED)window.parent.postMessage({type:"FU_RADIO",action:"state"},"*");
+
 })();
 </script>
 </body>
