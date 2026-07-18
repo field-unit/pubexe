@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>PUBEXE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root{--b:#0000aa;--d:#000055;--c:#00aaaa;--w:#fff;--k:#000;--g:#00aa00;--l:#55ff55;--r:#aa0000;--rr:#ff5555;--y:#ffff55;--m:#aa00aa;--x:#aaa;--f:"Press Start 2P",monospace}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--b);color:var(--w);font-family:var(--f)}
+body{display:flex;justify-content:center;padding:12px}.shell{width:min(1040px,100%);border:4px double var(--w);box-shadow:0 0 0 3px var(--k);background:var(--b)}
+.top{display:flex;justify-content:space-between;gap:10px;padding:9px 10px;color:var(--b);background:var(--w);font-size:11px;line-height:1.4}
+.main{display:grid;grid-template-columns:minmax(0,1fr) 292px;gap:10px;padding:10px}.view{position:relative;min-width:0;border:3px solid var(--w);background:var(--k)}
+canvas{display:block;width:100%;aspect-ratio:4/3;image-rendering:pixelated;touch-action:manipulation;cursor:pointer}
+.scan{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.2) 0 1px,transparent 1px 3px),repeating-linear-gradient(90deg,rgba(255,255,255,.025) 0 1px,transparent 1px 4px)}
+.radio{position:absolute;left:8px;bottom:8px;z-index:4;width:238px;border:3px double var(--w);background:var(--b);padding:7px;box-shadow:0 0 0 2px var(--k)}
+.rtop{display:flex;align-items:center;gap:7px;margin-bottom:6px}.speaker{width:42px;height:27px;flex:0 0 auto;border:2px solid var(--k);background:radial-gradient(circle at 8px 7px,var(--k) 0 2px,transparent 3px),radial-gradient(circle at 18px 7px,var(--k) 0 2px,transparent 3px),radial-gradient(circle at 28px 7px,var(--k) 0 2px,transparent 3px),radial-gradient(circle at 8px 18px,var(--k) 0 2px,transparent 3px),radial-gradient(circle at 18px 18px,var(--k) 0 2px,transparent 3px),radial-gradient(circle at 28px 18px,var(--k) 0 2px,transparent 3px),var(--x)}
+.rdisplay{min-width:0;flex:1;border:2px inset var(--w);background:var(--k);padding:5px}.rlabel{margin-bottom:4px;color:var(--c);font-size:5px;line-height:1.4}
+#screenTrack{color:var(--l);font-size:6px;line-height:1.45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rbuttons{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px}.rbuttons button{padding:8px 3px;font-size:6px}.rbuttons button.on{background:var(--l)}.rbuttons button.off{background:var(--rr)}
+.side{display:flex;flex-direction:column;gap:10px}.panel{min-width:0;border:3px double var(--w);padding:8px}.panel h2{margin:0 0 8px;color:var(--y);font-size:10px;line-height:1.5}
+.stat{display:flex;justify-content:space-between;gap:8px;margin:7px 0;font-size:8px;line-height:1.45}.stat span{color:var(--x)}.stat b{color:var(--l);text-align:right}
+.now{margin-top:10px;padding-top:9px;border-top:1px dashed var(--c)}.nowlabel{margin-bottom:7px;color:var(--x);font-size:7px}#nowTrack{color:var(--w);font-size:8px;line-height:1.6;overflow-wrap:anywhere}#nowArtist{margin-top:4px;color:var(--c);font-size:7px;line-height:1.5}
+#log{height:194px;overflow:auto;border:1px solid var(--c);background:var(--k)}.row{padding:9px 7px;border-bottom:1px dotted var(--d);color:var(--x);font-size:7px;line-height:1.65}.row.good{color:var(--l)}.row.great{color:var(--y)}.row.bad{color:var(--rr)}
+.buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px}button{border:0;outline:2px solid var(--w);outline-offset:-3px;color:var(--k);background:var(--x);font-family:var(--f);font-size:7px;line-height:1.5;padding:10px 7px;cursor:pointer;box-shadow:inset -3px -3px #555,inset 3px 3px #fff}
+button:active{box-shadow:inset 3px 3px #555,inset -3px -3px #fff;transform:translate(1px,1px)}#reset{background:var(--y)}
+.help{padding:11px;border-top:2px solid var(--c);color:var(--x);font-size:7px;line-height:1.8}.help b{color:var(--w)}
+@media(max-width:780px){.main{grid-template-columns:1fr}.side{display:grid;grid-template-columns:1fr 1fr}.buttons{grid-column:1/-1}#log{height:145px}}
+@media(max-width:540px){body{padding:5px}.shell{border-width:3px}.top{font-size:7px}.main{padding:6px;gap:6px}.side{display:flex}.panel{border-width:2px}#log{height:160px}.radio{left:5px;bottom:5px;width:218px;padding:6px}.speaker{width:36px;height:24px}.rbuttons button{min-height:34px;padding:7px 3px}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="top"><span>PUBEXE // LAST ORDERS</span><span id="clock">00:00:00</span></div>
+  <div class="main">
+    <section class="view">
+      <canvas id="game" width="640" height="480" aria-label="Rapid tap pint drinking game"></canvas>
+      <section class="radio" aria-label="Field Unit radio controls">
+        <div class="rtop"><div class="speaker" aria-hidden="true"></div><div class="rdisplay"><div class="rlabel">JUKEBOX RADIO</div><div id="screenTrack">WAITING FOR INPUT</div></div></div>
+        <div class="rbuttons"><button id="screenSound">SFX ON</button><button id="screenMusic">MUSIC ON</button><button id="screenSkip">SKIP</button></div>
+      </section>
+      <div class="scan"></div>
+    </section>
+    <aside class="side">
+      <section class="panel">
+        <h2>:: PINT DATA</h2>
+        <div class="stat"><span>PINTS</span><b id="pints">0</b></div>
+        <div class="stat"><span>CURRENT</span><b id="current">--.--s</b></div>
+        <div class="stat"><span>BEST</span><b id="best">--.--s</b></div>
+        <div class="stat"><span>TAPS</span><b id="taps">0</b></div>
+        <div class="stat"><span>TAPS/SEC</span><b id="tps">0.0</b></div>
+        <div class="stat"><span>PINT LEFT</span><b id="left">100%</b></div>
+        <div class="now"><div class="nowlabel">JUKEBOX RADIO</div><div id="nowTrack">WAITING FOR INPUT</div><div id="nowArtist">FIELD UNIT</div></div>
+      </section>
+      <section class="panel"><h2>:: BAR LOG</h2><div id="log" aria-live="polite"><div class="row">PINT PROCESS INITIALISED.</div><div class="row">TAP THE VIEW AS FAST AS YOU CAN.</div></div></section>
+      <section class="buttons"><button id="sound">SFX: ON</button><button id="music">MUSIC: ON</button><button id="skip">SKIP TRACK</button><button id="reset">NEW PINT</button></section>
+    </aside>
+  </div>
+  <div class="help"><b>HOW TO PLAY:</b> TAP OR CLICK THE PUB VIEW AS FAST AS POSSIBLE TO CHUG THE PINT. THE FIRST TAP STARTS THE TIMER. EACH TAP TAKES A GULP; FASTER TAPPING EMPTIES THE GLASS MORE QUICKLY. FINISH THE PINT TO LOG A TIME, THEN TAP AGAIN FOR ANOTHER.</div>
+</div>
+<script>
+(()=>{
+"use strict";
+const q=id=>document.getElementById(id),cv=q("game"),ctx=cv.getContext("2d");
+const ui={clock:q("clock"),pints:q("pints"),current:q("current"),best:q("best"),taps:q("taps"),tps:q("tps"),left:q("left"),log:q("log"),sound:q("sound"),music:q("music"),skip:q("skip"),reset:q("reset"),screenSound:q("screenSound"),screenMusic:q("screenMusic"),screenSkip:q("screenSkip"),screenTrack:q("screenTrack"),nowTrack:q("nowTrack"),nowArtist:q("nowArtist")};
+const W=640,H=480,C={b:"#0000aa",d:"#000055",c:"#00aaaa",w:"#fff",k:"#000",g:"#00aa00",l:"#55ff55",r:"#aa0000",rr:"#ff5555",y:"#ffff55",m:"#aa00aa",x:"#aaa"};
+const PLAYLIST=[
+{title:"NATURE OF FREAK",artist:"FIELD UNIT",src:"https://field-unit.github.io/Nature_of_Freak_Demo.mp3"},
+{title:"NOMEMORY NOTREAL",artist:"FIELD UNIT",src:"https://field-unit.github.io/nomemory_notreal_mthree.mp3"},
+{title:"THE OF THE",artist:"FIELD UNIT",src:"https://field-unit.github.io/the_of_the_demo.mp3"},
+{title:"CURLEY CUH",artist:"FIELD UNIT",src:"https://field-unit.github.io/Curley_Cuh_Demo.mp3"},
+{title:"POCKET MUCK",artist:"FIELD UNIT",src:"https://field-unit.github.io/Pocket_Muck_Demo.mp3"},
+{title:"MEDIUM SLATE",artist:"FIELD UNIT",src:"https://field-unit.github.io/Medium_Slate_Demo.mp3"},
+{title:"LAN_33",artist:"FIELD UNIT",src:"https://field-unit.github.io/LAN_33_Demo.mp3"},
+{title:"NAVVY",artist:"FIELD UNIT",src:"https://field-unit.github.io/Navvy_Demo.mp3"},
+{title:"LBD+M3",artist:"FIELD UNIT",src:"https://field-unit.github.io/lbd_m3_demo.mp3"}];
+let state={pints:0,best:null,taps:0,left:1,running:false,finished:false,start:0,finish:0,lastTap:0,rate:0},soundOn=true,musicOn=true,musicStarted=false,trackIndex=0,audioCtx=null,status="TAP TO START",statusUntil=0;
+const bgm=new Audio();bgm.preload="auto";bgm.volume=.34;
+const now=()=>performance.now(),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),font=s=>`${s}px "Press Start 2P", monospace`;
+function addLog(text,cls=""){const d=document.createElement("div");d.className=`row ${cls}`.trim();d.textContent=text;ui.log.prepend(d);while(ui.log.children.length>12)ui.log.lastChild.remove()}
+function setStatus(s,d=700){status=s;statusUntil=now()+d}
+function fmt(ms){return (ms/1000).toFixed(2)+"s"}
+function elapsed(){return state.running?now()-state.start:state.finished?state.finish-state.start:0}
+function update(){const e=elapsed();ui.pints.textContent=state.pints;ui.current.textContent=(state.running||state.finished)?fmt(e):"--.--s";ui.best.textContent=state.best==null?"--.--s":fmt(state.best);ui.taps.textContent=state.taps;ui.tps.textContent=e>0?(state.taps/(e/1000)).toFixed(1):"0.0";ui.left.textContent=Math.ceil(state.left*100)+"%"}
+function ensureAudio(){if(!soundOn)return null;if(!audioCtx){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return null;audioCtx=new AC()}if(audioCtx.state==="suspended")audioCtx.resume();return audioCtx}
+function tone(f=440,d=.08,v=.04,type="square",slide=0){const ac=ensureAudio();if(!ac)return;const o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.setValueAtTime(f,ac.currentTime);o.frequency.linearRampToValueAtTime(f+slide,ac.currentTime+d);g.gain.setValueAtTime(v,ac.currentTime);g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+d);o.connect(g).connect(ac.destination);o.start();o.stop(ac.currentTime+d)}
+function gulp(){tone(115,.055,.035,"square",-30);setTimeout(()=>tone(85,.05,.022,"triangle",-10),40)}
+function syncAudio(){ui.sound.textContent="SFX: "+(soundOn?"ON":"OFF");ui.music.textContent="MUSIC: "+(musicOn?"ON":"OFF");ui.screenSound.textContent="SFX "+(soundOn?"ON":"OFF");ui.screenMusic.textContent="MUSIC "+(musicOn?"ON":"OFF");ui.screenSound.classList.toggle("on",soundOn);ui.screenSound.classList.toggle("off",!soundOn);ui.screenMusic.classList.toggle("on",musicOn);ui.screenMusic.classList.toggle("off",!musicOn)}
+function setTrack(i){trackIndex=(i+PLAYLIST.length)%PLAYLIST.length;const t=PLAYLIST[trackIndex];ui.nowTrack.textContent=t.title;ui.nowArtist.textContent=t.artist;ui.screenTrack.textContent=t.title;bgm.pause();bgm.src=t.src;bgm.currentTime=0;bgm.volume=musicOn?0.34:0;if(musicOn)bgm.play().catch(()=>{ui.nowTrack.textContent="TAP TO START RADIO";ui.screenTrack.textContent="TAP TO START"})}
+function startMusic(){if(musicStarted)return;musicStarted=true;setTrack(Math.floor(Math.random()*PLAYLIST.length))}
+function nextTrack(){setTrack(trackIndex+1)}
+function toggleSound(){soundOn=!soundOn;syncAudio();if(soundOn)tone(460,.06,.035,"square",70)}
+function toggleMusic(){musicOn=!musicOn;syncAudio();if(musicOn){startMusic();bgm.volume=.34;bgm.play().catch(()=>{})}else bgm.pause()}
+function skipTrack(){if(!musicOn){musicOn=true;syncAudio()}if(!musicStarted)startMusic();else nextTrack();bgm.volume=.34;bgm.play().catch(()=>{});addLog("RADIO SKIP // "+PLAYLIST[trackIndex].title,"good")}
+bgm.addEventListener("ended",()=>{if(musicOn)nextTrack()});
+function newPint(){state.taps=0;state.left=1;state.running=false;state.finished=false;state.start=0;state.finish=0;state.lastTap=0;state.rate=0;setStatus("TAP TO START",900);addLog("FRESH PINT SERVED.");update()}
+function finishPint(){state.running=false;state.finished=true;state.finish=now();const t=state.finish-state.start;state.pints++;if(state.best==null||t<state.best)state.best=t;setStatus("PINT FINISHED!",1300);addLog("PINT DOWN // "+fmt(t),t<4000?"great":"good");tone(430,.08,.04,"square",170);setTimeout(()=>tone(680,.1,.04,"square",130),90);update()}
+function tapDrink(){ensureAudio();startMusic();const t=now();if(state.finished){newPint();return}if(!state.running){state.running=true;state.start=t;setStatus("CHUG!",500);addLog("TIMER STARTED.","good")}state.taps++;const interval=state.lastTap?t-state.lastTap:180;state.lastTap=t;state.rate=clamp(1-interval/360,0,1);const gulpSize=.018+state.rate*.014+(Math.random()*.005);state.left=clamp(state.left-gulpSize,0,1);gulp();if(state.left<=0)finishPint();update()}
+cv.addEventListener("pointerdown",e=>{e.preventDefault();tapDrink()});
+ui.sound.addEventListener("click",toggleSound);ui.music.addEventListener("click",toggleMusic);ui.skip.addEventListener("click",skipTrack);ui.reset.addEventListener("click",newPint);ui.screenSound.addEventListener("click",toggleSound);ui.screenMusic.addEventListener("click",toggleMusic);ui.screenSkip.addEventListener("click",skipTrack);
+function drawPub(t){const shake=state.running?state.rate*3:0,ox=Math.sin(t*.09)*shake,oy=Math.cos(t*.075)*shake;ctx.save();ctx.translate(ox,oy);ctx.fillStyle=C.k;ctx.fillRect(-5,-5,W+10,H+10);ctx.fillStyle=C.d;ctx.fillRect(0,0,W,275);ctx.fillStyle=C.r;ctx.fillRect(0,275,W,205);ctx.strokeStyle=C.b;ctx.lineWidth=2;for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x+18,275);ctx.stroke()}ctx.fillStyle=C.x;ctx.fillRect(0,0,W,30);ctx.fillStyle=((t/130|0)%19===0)?C.x:C.w;ctx.fillRect(225,10,190,8);ctx.fillStyle=C.k;ctx.fillRect(25,52,150,38);ctx.fillRect(455,50,160,42);ctx.font=font(7);ctx.textBaseline="top";ctx.fillStyle=C.y;ctx.fillText("LAST ORDERS",41,65);ctx.fillStyle=C.c;ctx.fillText("NO CREDIT",479,62);ctx.fillText("NO TROUBLE",472,77);ctx.fillStyle=C.m;ctx.fillRect(0,286,W,42);ctx.fillStyle=C.x;ctx.fillRect(0,328,W,152);ctx.strokeStyle=C.k;ctx.lineWidth=4;for(let y=345;y<480;y+=28){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}ctx.fillStyle=C.k;ctx.fillRect(23,237,120,16);ctx.fillRect(493,235,122,16);ctx.fillStyle=C.y;ctx.fillRect(55,202,24,35);ctx.fillRect(535,201,24,34);ctx.fillStyle=C.w;ctx.fillRect(56,201,22,5);ctx.fillRect(536,200,22,5);ctx.restore()}
+function drawPint(t){const tilt=state.running?Math.sin(t*.028)*state.rate*.14:0,bob=state.running?Math.sin(t*.055)*state.rate*7:0,raise=(1-state.left)*86;ctx.save();ctx.translate(320,355-raise+bob);ctx.rotate(tilt);ctx.fillStyle=C.w;ctx.fillRect(-74,-144,148,176);ctx.fillStyle=C.k;ctx.fillRect(-64,-134,128,156);const beerH=Math.floor(144*state.left);ctx.fillStyle=C.y;ctx.fillRect(-61,10-beerH,122,beerH);ctx.fillStyle=C.w;const foam=Math.max(5,11+state.rate*10);ctx.fillRect(-61,9-beerH-foam,122,foam);ctx.fillStyle=C.x;ctx.fillRect(-72,-142,144,7);ctx.strokeStyle=C.c;ctx.lineWidth=4;ctx.strokeRect(-74,-144,148,176);ctx.fillStyle=C.d;ctx.fillRect(-92,-35,18,58);ctx.fillRect(74,-35,18,58);ctx.restore();ctx.fillStyle=C.w;ctx.beginPath();ctx.moveTo(175,480);ctx.lineTo(205,355-raise);ctx.lineTo(276,365-raise);ctx.lineTo(280,480);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(465,480);ctx.lineTo(435,355-raise);ctx.lineTo(364,365-raise);ctx.lineTo(360,480);ctx.closePath();ctx.fill()}
+function drawHUD(){ctx.fillStyle=C.k;ctx.fillRect(8,8,350,48);ctx.strokeStyle=C.w;ctx.strokeRect(8.5,8.5,350,48);ctx.font=font(7);ctx.textBaseline="top";ctx.fillStyle=C.y;ctx.fillText("MIDLAND PUB // RAPID TAP MODE",17,16);ctx.fillStyle=now()<statusUntil?C.l:C.w;ctx.fillText(now()<statusUntil?status:(state.running?"KEEP TAPPING":"TAP TO START"),17,36);ctx.fillStyle=C.k;ctx.fillRect(475,8,157,48);ctx.strokeStyle=C.w;ctx.strokeRect(475.5,8.5,157,48);ctx.fillStyle=C.c;ctx.fillText("LEFT "+Math.ceil(state.left*100)+"%",485,16);ctx.fillStyle=C.y;ctx.fillText(state.running?fmt(elapsed()):"READY",485,36)}
+function grain(t){const ph=(t/75|0)%4;ctx.globalAlpha=.17;ctx.fillStyle=C.w;for(let y=ph;y<H;y+=4)for(let x=(y+ph)%5;x<W;x+=11)if((x*17+y*13+ph*7)%23<5)ctx.fillRect(x,y,1,1);ctx.globalAlpha=1}
+function loop(t){drawPub(t);drawPint(t);drawHUD();grain(t);if(state.running)update();requestAnimationFrame(loop)}
+function clock(){const d=new Date();ui.clock.textContent=[d.getHours(),d.getMinutes(),d.getSeconds()].map(v=>String(v).padStart(2,"0")).join(":")}
+update();syncAudio();clock();setInterval(clock,1000);requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
